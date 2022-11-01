@@ -5,9 +5,9 @@ def findsource():
 
 L = np.array([32, 1])  # Length of the container
 DT = .02  # Length of a time step
-NT = 1000  # number of time steps
-NG = (32, 32)  # Number of Grid points
-N = 400000  # Number of simulation particles
+NT = 500  # number of time steps
+NG = 16 # Number of Grid points
+N = 20000  # Number of simulation particles
 WP = 1  # omega p
 QM = -1  # charge per mass
 VT = 1  # Thermal Velocity
