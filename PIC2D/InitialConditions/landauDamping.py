@@ -6,7 +6,8 @@ def findsource():
 L = np.array([32, 1])  # Length of the container
 DT = .02  # Length of a time step
 NT = 500  # number of time steps
-NG = 16 # Number of Grid points
+NG = 16 # Number of Grid points, USE THE FORM (NG0, NG1) FOR REGULAR PIF, AND NG FOR SPARSE PIF
+## NG = (16, 16) # Number of Grid points, USE THE FORM (NG0, NG1) FOR REGULAR PIF, AND NG FOR SPARSE PIF
 N = 20000  # Number of simulation particles
 WP = 1  # omega p
 QM = -1  # charge per mass
