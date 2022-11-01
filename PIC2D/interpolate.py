@@ -23,8 +23,6 @@ def interpolate(M):
     return np.asarray((Q / dx) * M.sum(0) + rho_back * np.ones([1, NG]))[0]
 
 
-def specInterpolate(XP, Shat, wp=1):
-    rhoHat = Q * Shat * finufft.nufft2d1(XP[0] * 2 * np.pi / L[0], XP[1] * 2 * np.pi / L[1], 0j + np.zeros(N) + wp, NG, eps=1e-12, modeord=1)
-    rhoHat[1:, :] = np.flip(rhoHat[1:, :], 0)
-    rhoHat[:, 1:] = np.flip(rhoHat[:,1:], 1)
+def specInterpolate(XP, Shat, wp=1, ng=NG):
+    rhoHat = np.conjugate(Q * Shat * finufft.nufft2d1(XP[0] * 2 * np.pi / L[0], XP[1] * 2 * np.pi / L[1], 0j + np.zeros(N) + wp, tuple(ng), eps=1e-12, modeord=1))
     return rhoHat

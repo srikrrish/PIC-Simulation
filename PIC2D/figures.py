@@ -1,15 +1,15 @@
 import numpy as np
 from scipy import sparse
 import matplotlib.pyplot as plt
-from initialize import dx, NT, DT, Q, VT, NG, k
+from initialize import dx, NT, DT, Q, VT, k
 import landauDecay, dynamics
 import mpl_toolkits.mplot3d
 
-def phaseSpace(xp, vp, wp):
+def phaseSpace(xp, vp, wp, NG):
     g1 = np.floor(xp / dx[0]).astype(int)  # which grid point to project onto
     g = np.array([g1 - 1, g1, g1 + 1])
     g = g[:, np.abs(vp) < 10 * VT]
-    g = dynamics.toPeriodic(g, NG[0], True)
+    g = dynamics.toPeriodic(g, NG, True)
     delta = xp % dx[0]
     fraz = np.array([(1 - delta) ** 2 / 2, 1 - ((1 - delta) ** 2 / 2 + delta ** 2 / 2), delta ** 2 / 2] * wp)
     fraz = fraz[:, np.abs(vp) < 10 * VT]
@@ -22,7 +22,7 @@ def phaseSpace(xp, vp, wp):
     plt.imshow(mat, vmin=0, vmax=np.max(mat), cmap='plasma', interpolation="nearest")
     plt.colorbar()
     plt.axis('off')
-
+    plt.show()
 
 def energyFig(E, Ek=None, Ep=None):
     plt.plot(np.linspace(0, NT * DT, NT), E / E[0], label='Total Energy')
@@ -33,6 +33,8 @@ def energyFig(E, Ek=None, Ep=None):
     plt.legend()
     plt.ylabel('Normalized Energy', fontsize='14')
     plt.xlabel('$\omega_p$t', fontsize='14')
+    plt.grid(color='gray')
+    plt.show()
 
 def landauDecayFig(phiMax):
     a = np.linspace(0, (NT - 1) * DT, NT)
@@ -46,10 +48,13 @@ def landauDecayFig(phiMax):
     plt.xlabel('normalized time unit: $\omega_p$t', fontsize='14')
     plt.legend()
     plt.grid(color='gray')
+    plt.show()
 
 def field2D(field):
+    from initialize import NG
+    if isinstance(NG, int):
+        NG=[NG,NG]
     x = np.linspace(0, NG[0]-1, NG[0]).astype(int).tolist()
-    print(x)
     y = np.linspace(0, NG[0]-1, NG[0]).astype(int).tolist()
     values = []
     fig = plt.figure()

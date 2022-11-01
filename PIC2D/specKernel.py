@@ -1,9 +1,8 @@
 import numpy as np
 from scipy import special
-from initialize import NG, L
 
 
-def specKernel(order=2):
+def specKernel(NG, L, order=2):
     r = 0.5
     Ja = np.arange(0, NG[0] // 2)
     Jb = Ja[:0:-1]

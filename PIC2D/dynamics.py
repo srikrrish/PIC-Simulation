@@ -8,21 +8,17 @@ def accelerate(vp, it, M, E, wp):
     return push(vp, a, it)
 
 
-def accelInFourier(vp, xp, it, EgHat, Shat, wp):
-    coeff1 = EgHat[0] * Shat
-    coeff1[1:, :] = np.flip(coeff1[1:, :], 0)
-    coeff1[:, 1:] = np.flip(coeff1[:, 1:], 1)
+def accelInFourier(xp, EgHat, Shat, wp):
+    coeff1 = np.conjugate(EgHat[0] * Shat)
     a1 = np.real(finufft.nufft2d2(xp[0] * 2 * np.pi / L[0], xp[1] * 2 * np.pi / L[1], coeff1, eps=1e-12, modeord=1) * QM / (L[0] * L[1] * wp))
-    coeff2 = EgHat[1] * Shat
-    coeff2[1:, :] = np.flip(coeff2[1:, :], 0)
-    coeff2[:, 1:] = np.flip(coeff2[:, 1:], 1)
+    coeff2 = np.conjugate(EgHat[1] * Shat)
     a2 = np.real(finufft.nufft2d2(xp[0] * 2 * np.pi / L[0], xp[1] * 2 * np.pi / L[1], coeff2, eps=1e-12, modeord=1) * QM / (L[1] * L[0] * wp))
-    return push(vp, np.array([a1, a2]), it)
+    return np.array([a1, a2])
 
 
 def push(vp, a, it):
     if it == 0:
-        return vp + a * DT / 2, kinetic(vp + a * DT / 2)
+        return vp + a * DT / 2, kinetic(vp + a * DT)
     else:
         return vp + a * DT, kinetic(vp + a * DT / 2)
 

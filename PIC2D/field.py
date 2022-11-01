@@ -1,5 +1,5 @@
 import numpy as np
-from initialize import L
+from initialize import L, NG
 import figures
 
 
@@ -15,10 +15,10 @@ def field(rho):
 def fieldInFourier(rhoHat):
     Ja = np.arange(rhoHat.shape[0] // 2)
     Jb = Ja[:0:-1]
-    J = np.append(np.append(Ja, [rhoHat.shape[0] // 2]), - Jb)
+    J = np.append(np.append(Ja, [-rhoHat.shape[0] // 2]), - Jb)
     Ka = np.arange(rhoHat.shape[1] // 2)
     Kb = Ka[:0:-1]
-    K = np.append(np.append(Ka, [rhoHat.shape[1] // 2]), - Kb)
+    K = np.append(np.append(Ka, [-rhoHat.shape[1] // 2]), - Kb)
     J = np.transpose(np.expand_dims(J, 0).repeat(rhoHat.shape[1], axis=0)) * 2 * np.pi / L[0]
     K = np.expand_dims(K, 0).repeat(rhoHat.shape[0], axis=0) * 2 * np.pi / L[1]
     absolute = J ** 2 + K ** 2
