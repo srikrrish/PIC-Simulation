@@ -1,2 +1,2 @@
 k=None
-from initialConditions.landauDamping import *
+from initialConditions.manufactured1 import *

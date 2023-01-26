@@ -3,9 +3,10 @@ from energy import kinetic
 import numpy as np
 import finufft
 
-def accelerate(vp, it, M, E, wp):
-    a = np.transpose(M * E) * QM / wp
-    return push(vp, a, it)
+def accelerate(M, E, wp):
+    a1 = np.transpose(M * E[0].flatten()) * QM / wp
+    a2 = np.transpose(M * E[1].flatten()) * QM / wp
+    return np.array([a1, a2])
 
 
 def accelInFourier(xp, EgHat, Shat, wp):
@@ -13,6 +14,7 @@ def accelInFourier(xp, EgHat, Shat, wp):
     a1 = np.real(finufft.nufft2d2(xp[0] * 2 * np.pi / L[0], xp[1] * 2 * np.pi / L[1], coeff1, eps=1e-12, modeord=1) * QM / (L[0] * L[1] * wp))
     coeff2 = np.conjugate(EgHat[1] * Shat)
     a2 = np.real(finufft.nufft2d2(xp[0] * 2 * np.pi / L[0], xp[1] * 2 * np.pi / L[1], coeff2, eps=1e-12, modeord=1) * QM / (L[1] * L[0] * wp))
+
     return np.array([a1, a2])
 
 
@@ -44,11 +46,3 @@ def toPeriodicND(x, L, dim=2, discrete=False):
     for i in range(dim):
         x[i] = toPeriodic(x[i], L[i], discrete)
     return x
-
-x = np.array([[1,2,3],[4,5,6],[7,8,9]])
-x[:,1:] = np.flip(x[:,1:], 1)
-print(x)
-# x = np.append(np.transpose([x[:, 0]]), np.flip(x[:, 1:], 1), axis=1)
-# print(x)
-# x = np.append([x[0, :]], np.flip(x[1:, :], 0), axis=0)
-# print(x)

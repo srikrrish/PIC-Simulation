@@ -20,9 +20,8 @@ def phaseSpace(xp, vp, wp, NG):
     mat = mat.todense()
     mat = np.append(mat, np.zeros([128 - mat.shape[0], mat.shape[1]]), axis=0)
     plt.imshow(mat, vmin=0, vmax=np.max(mat), cmap='plasma', interpolation="nearest")
-    plt.colorbar()
+    #plt.colorbar()
     plt.axis('off')
-    plt.show()
 
 def energyFig(E, Ek=None, Ep=None):
     plt.plot(np.linspace(0, NT * DT, NT), E / E[0], label='Total Energy')

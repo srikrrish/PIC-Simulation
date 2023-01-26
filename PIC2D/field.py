@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from initialize import L, NG
 import figures
 
@@ -6,13 +7,13 @@ import figures
 
 def field(rho):
     rhoHat = np.fft.fft2(rho)
-    phiHat, EHat = fieldInFourier(rhoHat)
+    phiHat, EHat = fieldInFourier(rhoHat, process=False)
     phi = np.real(np.fft.ifft2(phiHat))
     E = np.real(np.array([np.fft.ifft2(EHat[0]), np.fft.ifft2(EHat[1])]))
     return phi, E
 
 
-def fieldInFourier(rhoHat):
+def fieldInFourier(rhoHat, process=True):
     Ja = np.arange(rhoHat.shape[0] // 2)
     Jb = Ja[:0:-1]
     J = np.append(np.append(Ja, [-rhoHat.shape[0] // 2]), - Jb)

@@ -1,5 +1,6 @@
 import numpy as np
 import specKernel
+import matplotlib.pyplot as plt
 class sparseGrid2D:
     pgrid = []
     ngrid = []
@@ -26,3 +27,16 @@ class sparseGrid2D:
             nShat = Shat[int((N-self.ngrid[i,0])/2):int((N+self.ngrid[i,0])/2),:][:,int((N-self.ngrid[i,1])/2):int((N+self.ngrid[i,1])/2)]
             nShat = np.fft.ifftshift(nShat)
             self.nShats.append(nShat)
+
+    def bilinear(M, size):
+        M = np.array(M)
+        size = int(size)
+        shape = np.array(M.shape).astype(int)
+        MM = np.zeros([size, shape[1]])
+        for i in range(shape[1]):
+            MM[:,i] = np.interp(np.linspace(0, 1, size, endpoint=False)+1/(2*size), np.linspace(0, 1, shape[0], endpoint=False)+1/(2*shape[0]), M[:,i], period=1).T
+        MMM = np.zeros([size, size])
+        for i in range(size):
+            MMM[i,:] = np.interp(np.linspace(0, 1, size, endpoint=False)+1/(2*size), np.linspace(0, 1, shape[1], endpoint=False)+1/(2*shape[0]), MM[i,:], period=1)
+        return MMM
+
