@@ -72,7 +72,7 @@ def free_space_solver(rho, L, sigma=0, nufft=False): # free space poisson solver
 
     if sigma > 0: # Need to convolute with shape function
         l = LT
-        S = np.exp(-sigma**2*s**2 / 2) * np.real(sp.erf(l/(np.sqrt(2)*sigma)+1j*s/np.sqrt(2)*sigma)) / (L/N)**2
+        S = np.exp(-sigma**2*s**2 / 2) * np.real(sp.erf(l/(np.sqrt(2)*sigma)+1j*s/np.sqrt(2)*sigma)) / (4*L)**2
         green = S * green
 
     ## Precomputation
@@ -81,7 +81,7 @@ def free_space_solver(rho, L, sigma=0, nufft=False): # free space poisson solver
 
     ## Free space solution
     if nufft == True:
-        phiHat = np.fft.fft2(T) * rho
+        phiHat = np.fft.fft2(T) * rho 
     else:
         phiHat = np.fft.fft2(T)*np.fft.fft2(rho, s=[extension*N//2, extension*N//2])
     return phiHat
@@ -156,16 +156,13 @@ plt.savefig('free_space_convergence2.png', dpi=300)
 
 '''
 Next Steps: 
-
 1. Generate point charges off grid within the domain, 
 see if the convolutions with shape function & Green's 
 function are translation-invariant;
-
 2. Implement the solver in Particle-In-Fourier method,
 and test the convergence of the free-space solution 
 of the Vlasov-Poisson system, as well as conservation
 properties.
-
 '''
 
 def offgrid_fs_solve(Xs, L, N, sigma):
@@ -181,11 +178,7 @@ def offgrid_fs_solve(Xs, L, N, sigma):
             phiHat: the Fourier space of the potential phi (if want to retrieve phi then let phi=np.fft.ifft(phiHat)[2*N:3*N, 2*N:3*N])
     '''
     
-    ss = np.linspace(-N/2, N/2, N*4, endpoint=False)
-    ss1, ss2 = np.meshgrid(ss, ss)
-    ss1 = np.fft.ifftshift(ss1).flatten()
-    ss2 = np.fft.ifftshift(ss2).flatten()
-    raw = finufft.nufft2d3(Xs[0, :] * 2 * np.pi / L + np.pi, Xs[1, :] * 2 * np.pi / L + np.pi, 0j + np.ones(Np), ss1, ss2, eps=1E-14).reshape([4*N, 4*N])
+    raw = finufft.nufft2d1(Xs[1, :] * np.pi / (2*L) + np.pi / 4, Xs[0, :] * np.pi / (2*L) + np.pi / 4, 0j + np.ones(Np), (4*N, 4*N), eps=1E-14, modeord=1)
     ## Please note that finufft has a very strange bug, that its computed Fourier modes values are COMPLEX CONJUGATES of the true values
     phiHat = free_space_solver(np.conjugate(raw), L, sigma, nufft=True)
     return phiHat
@@ -194,7 +187,7 @@ error1 = []
 error2 = []
 errorinf = []
 L = 2
-Np = 3
+Np = 10
 Ns = np.array(np.arange(16, 96, step=4))
 Xs = np.random.rand(2, Np) * L - L/2
 #Xs = np.array([[2/64],[0]])
@@ -206,14 +199,14 @@ y = y.flatten()
 rho, exact_pot = off_grid_solution(Xs, L, 128, sigma)
 for N in Ns:
     phiHat = offgrid_fs_solve(Xs, L, N, sigma)
-    phi = np.real(finufft.nufft2d2(y, x, np.conjugate(phiHat), eps=10**-14, modeord=1)).reshape([512, 512]) / (16*N**2)
-    # plt.subplot(131)
-    # plt.imshow(phi[256:384, 256:384])
-    # plt.subplot(132)
-    # plt.imshow(exact_pot)
-    # plt.subplot(133)
-    # plt.imshow(exact_pot - phi[256:384, 256:384])
-    # plt.show()
+    phi = np.real(finufft.nufft2d2(y, x, np.conjugate(phiHat), eps=10**-14, modeord=1)).reshape([512, 512])
+    plt.subplot(131)
+    plt.imshow(phi)
+    plt.subplot(132)
+    plt.imshow(exact_pot)
+    plt.subplot(133)
+    plt.imshow(exact_pot - phi[256:384, 256:384])
+    plt.show()
     error = np.abs(phi[256:384, 256:384]-exact_pot)
     error1.append((2/128) ** 2 * np.sum(error))
     error2.append(2/128 * np.sqrt(np.sum(error **2)))
