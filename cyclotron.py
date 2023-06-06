@@ -22,10 +22,6 @@ B0 = np.array([0,0,300])
 sigmas = np.array([[1/30],[1/10]]) / np.sqrt(2)
 XP = np.random.randn(2, N) * sigmas
 VP = np.random.randn(2, N)
-# plt.scatter(XP[0,:], XP[1,:], alpha=0.1)
-# plt.xlim([-0.5, 0.5])
-# plt.ylim([-0.5, 0.5])
-# plt.show()
 
 # Prepare for convolution kernel:
 extension = 8
@@ -33,7 +29,7 @@ wm = np.linspace(- NG * np.pi / L, NG * np.pi / L, extension*NG, endpoint=False)
 wm1, wm2 = np.meshgrid(wm, wm)
 s = np.sqrt(wm1**2 + wm2**2)
 
-## Construct mollified Green's function
+# Construct mollified Green's function
 LT = 1.5 * L ## Truncation window size
 green = (1-sp.jv(0, LT*s)) / (s**2) - (LT*np.log(LT)*sp.jv(1, LT*s)) / s ## Green function in spectral space
 green[extension*NG//2, extension*NG//2] = (LT**2/4 - LT**2*np.log(LT)/2)
@@ -47,8 +43,8 @@ Shat[0, 0] = 1
 Shat = Shat / (r **2)
 
 green = Shat * np.fft.fftshift(green)
-# green = np.fft.fftshift(green)
-## Precomputation
+
+# Precomputation
 T1 = np.fft.ifftshift(np.fft.ifft2(green)) # * deltahat
 T = T1[extension*NG//4:extension*NG*3//4, extension*NG//4:extension*NG*3//4]
 T = np.fft.fft2(T)
@@ -81,13 +77,14 @@ for clock in range(NT):
     if not clock==0:
         Vm = VP + a * DT / 2
         Vprime = Vm + np.cross(Vm, B0, axisa=0)[:, 0:2].T * QM * DT / 2
-        Vp = Vm + np.cross(Vprime, B0, axisa=0)[:, 0:2].T * QM * DT / (1 + (np.linalg.norm(B0)*QM*DT/2) ** 2)
+        Vp = Vm + np.cross(Vprime, B0, axisa=0)[:, 0:2].T * QM * DT / (1 + (np.linalg.norm(B0) * QM * DT/2) ** 2)
         VP = Vp + a * DT / 2
     else:
         VP = VP + DT * (a + QM * np.cross(VP, B0, axisa=0)[:, 0:2].T) / 2
     XP = XP + DT * VP
 
-    if clock%20==0:
+    # Draw figures and generate animation
+    if clock % 20==0:
         print(clock)
         rho_Hat = -np.conjugate(raw) * Shat[::2,::2] * Q
         rho = np.fft.fftshift(np.real(np.fft.ifft2(rho_Hat)))[int(1.5*NG):int(2.5*NG), int(1.5*NG):int(2.5*NG)]
