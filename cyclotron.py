@@ -5,20 +5,19 @@ import finufft
 import matplotlib.animation as animation
 fig, ax = plt.subplots()
 artist = []
-
 L = 1
 N = 40000
 NG = 128
-DT = 0.0005 # Time step size
+DT = 0.001 # Time step size
 QM = -1
 WP = 1  # omega p
 VT = 1  # Thermal Velocity
-NT = int(10 // DT)  # number of time steps
+NT = int(20 // DT)  # number of time steps
 lambdaD = VT / WP
 Q = -60 / N  # Charge of a particle
 # self.rho_back = - self.Q * self.N / self.L  # background rho
 dx = L / NG
-B0 = 300
+B0 = np.array([0,0,300])
 
 sigmas = np.array([[1/30],[1/10]]) / np.sqrt(2)
 XP = np.random.randn(2, N) * sigmas
@@ -70,30 +69,31 @@ for clock in range(NT):
 
     # Compute Acceleration due to Electric Field
     coeff1 = np.conjugate(E0 * Shat[::2, ::2])
-    a1 = np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, coeff1, eps=1e-14, modeord=1) * QM) / (NG * 4) **2
+    a1 = np.array(np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, coeff1, eps=1e-14, modeord=1) * QM) / (NG * 4) **2)
     coeff2 = np.conjugate(E1 * Shat[::2, ::2])
-    a2 = np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, coeff2, eps=1e-14, modeord=1) * QM) / (NG * 4) **2
-
-    # Compute Acceleration due to Magnetic Field
-    # Leapfrog
-    if not clock==0:
-        VP = VP + DT * np.array([a1, a2]) 
-        new_VP1 = (QM * B0*DT/2 *(VP[1,:]+DT*(a2-QM*B0*VP[0,:]/2)) + VP[0,:] + DT * (a1+QM*B0*VP[1,:]/2)) / (1+(QM*B0*DT/2)**2)
-        new_VP2 = (-QM * B0*DT/2 *(VP[0,:]+DT*(a1+QM*B0*VP[1,:]/2)) + VP[1,:] + DT * (a2-QM*B0*VP[0,:]/2)) / (1+(QM*B0*DT/2)**2)
-        VP = np.array([new_VP1, new_VP2])
+    a2 = np.array(np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, coeff2, eps=1e-14, modeord=1) * QM) / (NG * 4) **2)
+    if N==1:
+        a = np.array([[a1], [a2]])
     else:
-        a1 = a1 + QM * B0 * VP[1,:]
-        a2 = a2 - QM * B0 * VP[0,:]
-        VP = VP + DT * np.array([a1, a2]) / 2
+        a = np.array([a1, a2])
+
+    # Compute Acceleration due to Magnetic Field using Boris Algorithm
+    if not clock==0:
+        Vm = VP + a * DT / 2
+        Vprime = Vm + np.cross(Vm, B0, axisa=0)[:, 0:2].T * QM * DT / 2
+        Vp = Vm + np.cross(Vprime, B0, axisa=0)[:, 0:2].T * QM * DT / (1 + (np.linalg.norm(B0)*QM*DT/2) ** 2)
+        VP = Vp + a * DT / 2
+    else:
+        VP = VP + DT * (a + QM * np.cross(VP, B0, axisa=0)[:, 0:2].T) / 2
     XP = XP + DT * VP
 
-    if clock%200==0:
+    if clock%20==0:
         print(clock)
         rho_Hat = -np.conjugate(raw) * Shat[::2,::2] * Q
         rho = np.fft.fftshift(np.real(np.fft.ifft2(rho_Hat)))[int(1.5*NG):int(2.5*NG), int(1.5*NG):int(2.5*NG)]
-        container = ax.imshow(rho, vmin=0,  vmax = 60*300 / np.pi)
+        container = ax.imshow(rho)
         #fig.colorbar(container)
         artist.append([container])
 
 ani = animation.ArtistAnimation(fig=fig, artists=artist, interval=40)
-ani.save(filename="cyclotron.mp4", writer="ffmpeg")
+ani.save(filename="cyclotron.gif", writer="Pillow")
