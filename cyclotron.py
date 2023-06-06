@@ -53,7 +53,7 @@ for clock in range(NT):
     '''
     1. Solve the electric field using Vico-Greengard and evaluate at particle positions using NUFFT
     
-    2. Push the particles using leapfrog
+    2. Push the particles using Boris algorithm
     '''
     # NUFFT Type 1 to evaluate exp(-ikX)
     raw = finufft.nufft2d1(XP[0, :] * np.pi / (2*L), XP[1, :] * np.pi / (2*L), 0j + np.ones(N), (4*NG, 4*NG), eps=1E-14, modeord=1)
