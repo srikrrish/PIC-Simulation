@@ -3,16 +3,15 @@ import matplotlib.pyplot as plt
 import scipy.special as sp
 import finufft
 import matplotlib.animation as animation
-fig, ax = plt.subplots()
-artist = []
+#fig, ax = plt.subplots()
+#artist = []
 L = 1
-N = 40000
 NG = 128
 QM = -1
+N = 40000
 WP = 1  # omega p
 VT = 1  # Thermal Velocity
-lambdaD = VT / WP
-Q = -0.5 / N  # Charge of a particle
+lambdaD = VT / WP  # Charge of a particle
 # self.rho_back = - self.Q * self.N / self.L  # background rho
 dx = L / NG
 B0 = np.array([0,0,300])
@@ -55,14 +54,16 @@ T2 = T2[extension*NG//4:extension*NG*3//4, extension*NG//4:extension*NG*3//4]
 T2 = np.fft.fft2(T2) # This is the kernel for acceleration
 
 dE = []
-
-for DT in [0.001]: #[0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002]:
+XP0 = np.random.randn(2, N) * sigmas
+VP0 = np.random.randn(2, N)
+for DT in [0.001, 0.0005, 0.00025]: #[0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002]:
     Eks = [] # Kinetic Energy
     Eps = [] # Potential Energy
     Etotals = [] # Total Energy
-    XP = np.random.randn(2, N) * sigmas
-    VP = np.random.rand(2, N)
-    NT = int(0.5 // DT)  # number of time steps
+    Q = - 0.5 / N
+    XP = XP0
+    VP = VP0
+    NT = int(0.1 // DT)  # number of time steps
     for clock in range(NT):
         '''
         1. Solve the electric field using Vico-Greengard and evaluate at particle positions using NUFFT
@@ -75,14 +76,12 @@ for DT in [0.001]: #[0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002]:
         # Compute Electric Field
         rho_Hat = np.conjugate(raw) * Shat[::2,::2] * Q
         phi_Hat = Q * T1 * np.conjugate(raw)
-        E0 = Q * T2 * np.conjugate(raw) * -1j * np.transpose(J)[::2, ::2]
-        E1 = Q * T2 * np.conjugate(raw) * -1j * J[::2, ::2] 
+        coeff1 = Q * T2 * np.conjugate(raw) * -1j * np.transpose(J)[::2, ::2] # Not exactly Electric field! Notice it convolutes twice with shape function
+        coeff2 = Q * T2 * np.conjugate(raw) * -1j * J[::2, ::2] 
 
         # Compute Acceleration due to Electric Field
-        coeff1 = np.conjugate(E0 * Shat[::2, ::2])
-        a1 = np.array(np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, coeff1, eps=1e-14, modeord=1) * QM))
-        coeff2 = np.conjugate(E1 * Shat[::2, ::2])
-        a2 = np.array(np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, coeff2, eps=1e-14, modeord=1) * QM))
+        a1 = np.array(np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, np.conjugate(coeff1), eps=1e-14, modeord=1) * QM))
+        a2 = np.array(np.real(finufft.nufft2d2(XP[0, :] * np.pi / (2*L) + np.pi, XP[1, :] * np.pi / (2*L) + np.pi, np.conjugate(coeff2), eps=1e-14, modeord=1) * QM))
         if N==1:
             a = np.array([[a1], [a2]])
         else:
@@ -94,7 +93,9 @@ for DT in [0.001]: #[0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002]:
             Vprime = Vm + np.cross(Vm, B0, axisa=0)[:, 0:2].T * QM * DT / 2
             Vp = Vm + np.cross(Vprime, B0, axisa=0)[:, 0:2].T * QM * DT / (1 + (np.linalg.norm(B0)*QM*DT/2) ** 2)
             new_VP = Vp + a * DT / 2
-            Ek = 0.5 * Q / QM * np.sum((VP ** 2 + new_VP ** 2) / 2)
+            # new_VP1 = (QM * B0[2]*DT/2 *(VP[1,:]+DT*(a2-QM*B0[2]*VP[0,:]/2)) + VP[0,:] + DT * (a1+QM*B0[2]*VP[1,:]/2)) / (1+(QM*B0[2]*DT/2)**2)
+            # new_VP2 = (-QM * B0[2]*DT/2 *(VP[0,:]+DT*(a1+QM*B0[2]*VP[1,:]/2)) + VP[1,:] + DT * (a2-QM*B0[2]*VP[0,:]/2)) / (1+(QM*B0[2]*DT/2)**2)
+            Ek = 0.5 * Q / QM * np.sum(((VP + new_VP) / 2) ** 2)
             VP = new_VP
         else:
             Ek = 0.5 * Q / QM * np.sum(VP ** 2)
@@ -107,21 +108,32 @@ for DT in [0.001]: #[0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002]:
         Ep = np.sum(np.fft.fft2(rho) * np.conjugate(phi_Hat) / (2 * L ** 2))
         Eps.append(Ep)
         Etotals.append(Ep + Ek)
-
         if clock%40==0:
             print(clock)
-            container = ax.imshow(-rho[int(1.5*NG):int(2.5*NG), int(1.5*NG):int(2.5*NG)])
+            # print(np.mean(np.abs(a1)), np.mean(np.abs(np.cross(VP, B0, axisa=0)[:, 0].T * QM)))
+            #container = ax.imshow(-rho[int(1.5*NG):int(2.5*NG), int(1.5*NG):int(2.5*NG)])
             # fig.colorbar(container)
-            artist.append([container])
-    dE.append(np.sum(np.abs(np.diff(Etotals / Etotals[0]))))
-ani = animation.ArtistAnimation(fig=fig, artists=artist, interval=40)
-ani.save(filename="test.gif", writer="Pillow")
-tick = np.linspace(0, clock*DT, clock+1, endpoint=False)
-plt.clf()
-plt.plot(tick, Etotals, label='Total Energy')
+            #artist.append([container])
+    tick = np.linspace(0, clock*DT, clock+1, endpoint=False)
+    plt.plot(tick, (np.array(Etotals) - Etotals[0]) / Etotals[0], linewidth='2', label=r"$DT = $" + str(DT))
+    if DT < 0.001:
+        plt.plot(tick, (np.array(Etotals) - Etotals[0]) / Etotals[0] * (0.001 / DT) ** 2, ls='--', linewidth='1.5', label= str((0.001 / DT) ** 2) + r"$\times DT = $" + str(DT))
+plt.legend()
+plt.xlabel('t')
+plt.ylabel('(E-E0)/E0')
+plt.show()
+#ani = animation.ArtistAnimation(fig=fig, artists=artist, interval=40)
+#ani.save(filename="test.gif", writer="Pillow")
+#tick = np.linspace(0, clock*DT, clock+1, endpoint=False)
+#plt.clf()
+#plt.plot(tick, Etotals, label='Total Energy')
 #plt.plot(tick, Eks, label='Kinetic Energy')
 #plt.plot(tick, Eps, label='Potential Energy')
-plt.xlim(0, 0.5)
+#plt.xlim(0, 0.5)
 #plt.loglog([0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002], dE, label='Energy Total Variation')
 #plt.legend()
-plt.show()
+# plt.scatter(XP[0,0], XP[1,0])
+# plt.scatter(XP[0,1], XP[1,1])
+# plt.xlim(-0.5, 0.5)
+# plt.ylim(-0.5, 0.5)
+# plt.show()
