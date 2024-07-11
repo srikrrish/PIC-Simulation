@@ -1,7 +1,7 @@
 from initialize import QM, L, DT, findsource
 from energy import kinetic
 import numpy as np
-import finufft
+#import finufft
 
 def accelerate(M, E, wp):
     a1 = np.transpose(M * E[0].flatten()) * QM / wp
@@ -20,13 +20,13 @@ def accelInFourier(xp, EgHat, Shat, wp):
 
 def push(vp, a, it):
     if it == 0:
-        return vp + a * DT / 2, kinetic(vp + a * DT)
+        return vp + a * DT / 2, kinetic(vp + a * DT / 2)
     else:
-        return vp + a * DT, kinetic(vp + a * DT / 2)
+        return vp + a * DT, kinetic(vp + a * DT)
 
 
 def move(xp, vp, wp, it=None):
-    if wp is 1:
+    if wp == 1:
         return xp + vp * DT, 1
     else:
         return xp + vp * DT, wp + DT * findsource(xp + vp * DT / 2, vp, L, it + 0.5, DT)

@@ -3,17 +3,19 @@ import numpy as np
 def findsource():
     return None
 
-L = np.array([32, 32])  # Length of the container
-DT = .02  # Length of a time step
-NT = 1  # number of time steps
-NG = 64 # Number of Grid points
-N = 50000  # Number of simulation particles
+L = np.array([4*np.pi, 4*np.pi])  # Length of the container
+DT = .05  # Length of a time step
+T = 20
+NT = int(T/DT)  # number of time steps
+#NT = 1  # number of time steps
+NG = 32 # Number of Grid points
+N = 1000000  # Number of simulation particles
 WP = 1  # omega p
 QM = -1  # charge per mass
 VT = 1  # Thermal Velocity
 lambdaD = VT / WP
-XP1 = 0.2  # Magnitude of perturbation in x
-mode = 2  # Mode of the sin wave in perturbation
+XP1 = 0.05  # Magnitude of perturbation in x
+mode = 1  # Mode of the sin wave in perturbation
 Q = WP ** 2 * L[0] * L[1] / (QM * N)  # Charge of a particle
 rho_back = - Q * N / (L[0] * L[1])  # background rho
 dx = L / NG  # cell length
@@ -32,4 +34,5 @@ Ek = []
 Ep = []
 E = []
 momentum = []
-phiMax = []
+#phiMax = []
+Exp = []

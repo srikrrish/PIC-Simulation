@@ -2,7 +2,7 @@ from initialize import dx, NG, rho_back, Q, N, L
 import numpy as np
 from dynamics import toPeriodic
 from scipy import sparse
-import finufft
+#import finufft
 
 p = np.linspace(0, N - 1, N).astype(int)
 
@@ -24,7 +24,7 @@ def interpMatrix(XP, wp, DX=dx):
     I = a**2 * b**2 / (4*tot)
     E = 1 - A - B - C - D - F - G - H - I
     fraz = np.array([A, B, C, D, E, F, G, H, I] * wp)
-    
+
     # apply bc on the projection
     g[0] = toPeriodic(g[0], int(L[0]/DX[0]), True)
     g[1] = toPeriodic(g[1], int(L[1]/DX[1]), True)

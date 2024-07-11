@@ -16,7 +16,7 @@ T = 2
 NT = int(T/DT)  # number of time steps
 print(NT)
 NG = 64 # Number of Grid points
-N = 320000  # Number of simulation particles
+N = 32000  # Number of simulation particles
 WP = 1  # omega p
 DT = DT * WP
 QM = -1  # charge per mass
