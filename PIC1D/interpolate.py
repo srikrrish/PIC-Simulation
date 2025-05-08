@@ -15,8 +15,8 @@ def interpMatrix(XP, wp):
 
     # apply bc on the projection
     g = toPeriodic(g, NG, True)
-    return sparse.csr_matrix((fraz[0], (p, g[0]))) + sparse.csr_matrix((fraz[1], (p, g[1]))) + sparse.csr_matrix(
-        (fraz[2], (p, g[2])))
+    return sparse.csr_matrix((fraz[0], (p, g[0])),shape=(N,NG)) + sparse.csr_matrix((fraz[1], (p, g[1])),shape=(N,NG)) + sparse.csr_matrix(
+        (fraz[2], (p, g[2])),shape=(N,NG))
 
 
 def interpolate(M):

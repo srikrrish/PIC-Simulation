@@ -1,11 +1,13 @@
-import initialize
+from initialize import QM, DT, N, NT, NG, findsource, L
 from energy import kinetic
 import numpy as np
-import finufft
+#import finufft
 
-def accelerate(vp, it, M, E, wp):
-    a = np.transpose(M * E) * initialize.QM / wp
-    return push(vp, a, it)
+def accelerate(it, M, Eg, Eout, wp):
+    Etemp = M * Eg
+    a = np.transpose(Etemp) * QM / wp
+    Eout[it,:] = Etemp.astype(np.float32)
+    return a, Eout
 
 
 def accelInFourier(vp, xp, it, EgHat, Shat, wp):
@@ -17,16 +19,16 @@ def accelInFourier(vp, xp, it, EgHat, Shat, wp):
 
 def push(vp, a, it):
     if it == 0:
-        return vp + a * initialize.DT / 2, kinetic(vp + a * initialize.DT / 2)
+        return vp + a * DT / 2, kinetic(vp + a * DT / 2)
     else:
-        return vp + a * initialize.DT, kinetic(vp + a * initialize.DT / 2)
+        return vp + a * DT, kinetic(vp + a * DT)
 
 
 def move(xp, vp, wp, it=None):
-    if wp is 1:
-        return xp + vp * initialize.DT, 1
+    if wp == 1:
+        return xp + vp * DT, 1
     else:
-        return xp + vp * initialize.DT, wp + initialize.DT * initialize.findsource(xp + vp * initialize.DT / 2, vp, initialize.L, it + 0.5, initialize.DT)
+        return xp + vp * DT, wp + DT * findsource(xp + vp * DT / 2, vp, L, it + 0.5, DT)
 
 
 def toPeriodic(x, L, discrete=False):
