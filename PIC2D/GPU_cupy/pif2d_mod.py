@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cupy as cp
 import torch
+import specKernel
 #Eg = np.zeros([2,NG**2])
 #model = torch.load('_Models/fno_dse.pt', map_location=torch.device('cpu'))
 nk = 1
@@ -41,54 +42,32 @@ for itk in range(nk):
     Exp = []
 
 
+    Shat = specKernel.specKernel(NG, L, dx)
     t1 = time.time()
     for it in range(NT):
         print(it)
         xp = dynamics.toPeriodicND(xp, L)
-        M = interpolate.interpMatrix(xp, wp, dx, L)
-        rho = interpolate.interpolate(M, dx, Q, L)
-        #print(np.abs((np.sum(rho*dx[0]*dx[1]) - (Q*N))/(Q*N)))
-        #print(np.sum(rho*dx[0]*dx[1]))
-        phi, Eg = field.field(rho, L)
-        #vp, kinetic = dynamics.accelerate(M, Eg, wp)
-        #ti = (it*DT) * np.ones([N, 1])
-        #pos[(itk*NT)+it,:,0] = np.squeeze(ti.astype(np.float32))
+        rhoHat = interpolate.specInterpolate(xp, Shat, Q, L)
+        phiHat, EgHat = field.fieldInFourier(rhoHat,L)
         pos[(itk*NT)+it,:,:] = cp.transpose(xp.astype(cp.float32))
-        #inputs = torch.tensor(np.transpose(xp), dtype=torch.float)
-        #predictions = model(inputs)
-        #Efieldparticle = predictions.numpy() * Q
-        #Efieldparticle = np.transpose(Efieldparticle)
-        a,Eout = dynamics.accelerate(M, Eg, Eout, wp, it, itk)
-        #a = dynamics.accelerateML(Efieldparticle, wp)
-        #Eg[0] = np.transpose(M) * np.reshape(Efieldparticle[0,:], (N,1))
-        #Eg[1] = np.transpose(M) * np.reshape(Efieldparticle[1,:], (N,1))
-        #Egp = energy.energypotx(Eg, dx)
+        a,Eout = dynamics.accelInFourier(xp, EgHat, Eout, Shat, wp, L, it, itk)
         Egp = cp.sum(Eout[(itk*NT)+it,:,1]**2) * (L[0] * L[1]) / N
         potential = cp.sum(Eout[(itk*NT)+it,:,0]**2 + Eout[(itk*NT)+it,:,1]**2) * 0.5 * (L[0] * L[1]) / N
         vp, kinetic = dynamics.push(vp, a, Q, it)
         xp, wp = dynamics.move(xp, vp, wp, L, it)
-        #potential = energy.potential(rho, phi, dx)
-        #Ek.append(kinetic)
-        #Ep.append(potential)
         E.append((kinetic + potential).get())
         momx = cp.sum(Q * vp[0,:] / QM)
         momy = cp.sum(Q * vp[1,:] / QM)
         momentum.append((cp.sqrt(momx**2 + momy**2)).get())
-        #momentum.append(sum(Q * vp / QM))
-        #phiMax.append(np.max(phi))
         Exp.append(Egp.get())
-    #figures.field2D(rho)
 
-    #figures.landauDecayFig(Exp)
     figures.landauDecayFigIppl(Exp,'strong')
-    #figures.twostreamFigIppl(Exp,'bti')
     figures.conservationErrors(E,momentum)
-    #figures.energyFig(E,k,Ek,Ep)
     Int_time = time.time() - t1
     print('Particle initialization time:',particle_init_time)
     print('Integration time:',Int_time)
     print('Total time:',time.time()-t)
 
 
-cp.save('data/pos_strongLandau_500k_Nyquist_corrected',pos)
-cp.save('data/Eout_strongLandau_500k_Nyquist_corrected',Eout)
+cp.save('data/pos_strongLandau_pif_500k',pos)
+cp.save('data/Eout_strongLandau_pif_500k',Eout)

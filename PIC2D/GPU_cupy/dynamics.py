@@ -2,7 +2,7 @@ from initialize import QM, DT, findsource, N, NT
 from energy import kinetic
 import numpy as np
 import cupy as cp
-#import finufft
+import cufinufft
 
 def accelerate(M, E, Eout, wp, it, itk):
     Extemp = M * E[0].flatten()
@@ -42,13 +42,18 @@ def calcResidue(xk,xn,vk,vn,Ehalfp):
 
 
 
-def accelInFourier(xp, EgHat, Shat, wp, L):
-    coeff1 = np.conjugate(EgHat[0] * Shat)
-    a1 = np.real(finufft.nufft2d2(xp[0] * 2 * np.pi / L[0], xp[1] * 2 * np.pi / L[1], coeff1, eps=1e-12, modeord=1) * QM / (L[0] * L[1] * wp))
-    coeff2 = np.conjugate(EgHat[1] * Shat)
-    a2 = np.real(finufft.nufft2d2(xp[0] * 2 * np.pi / L[0], xp[1] * 2 * np.pi / L[1], coeff2, eps=1e-12, modeord=1) * QM / (L[1] * L[0] * wp))
+def accelInFourier(xp, EgHat, Eout, Shat, wp, L, it, itk):
+    coeff1 = cp.conjugate(EgHat[0] * Shat)
+    a1 = cp.real(cufinufft.nufft2d2(xp[0] * 2 * cp.pi / L[0], xp[1] * 2 * cp.pi / L[1], coeff1, eps=1e-12, modeord=1) * QM / (L[0] * L[1] * wp))
+    coeff2 = cp.conjugate(EgHat[1] * Shat)
+    a2 = cp.real(cufinufft.nufft2d2(xp[0] * 2 * cp.pi / L[0], xp[1] * 2 * cp.pi / L[1], coeff2, eps=1e-12, modeord=1) * QM / (L[1] * L[0] * wp))
+    Extemp = a1 * wp / QM
+    Eytemp = a2 * wp / QM
 
-    return np.array([a1, a2])
+    Eout[(itk*NT)+it,:,0] = Extemp.astype(cp.float32)
+    Eout[(itk*NT)+it,:,1] = Eytemp.astype(cp.float32)
+
+    return cp.array([a1, a2]), Eout
 
 
 def push(vp, a, Q, it):

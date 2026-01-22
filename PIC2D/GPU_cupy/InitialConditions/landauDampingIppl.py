@@ -33,8 +33,9 @@ def InvTransSampling(alpha,k,L,N):
     u0 = np.random.rand(2, N)
     Lc = L.get()
     kc = k.get()
+    vp = np.random.randn(2, N)
     for i in range(N):
-        #print(i)
+        print(i)
         for d in range(2):
             u =  Lc[d] * u0[d, i]
             x = u / (1+alpha)
@@ -42,16 +43,17 @@ def InvTransSampling(alpha,k,L,N):
             xp[d,i],niter = Newton1d(x,alpha,kc[d],u)
             #print(niter)
 
-    return xp
+    return xp,vp
 
 DT = 0.05  # Length of a time step
-T = 20
+T = 60
 NT = int(T/DT)  # number of time steps
 NG = 32 # Number of Grid points
-N = 40000#500000  # Number of simulation particles
+N = 500000  # Number of simulation particles
 QM = -1  # charge per mass
 VT = 1  # Thermal Velocity
 wp = 1
+alpha = 0.5  # Magnitude of perturbation in x
 
 #k = np.array([0.5, 0.5])
 #L = np.array([2*np.pi/k[0], 2*np.pi/k[1]])  # Length of the container

@@ -8,4 +8,4 @@ def potential(rho, phi):
     return sum(rho * phi * dx / 2)
 
 def specPotential(rhoHat, phiHat):
-    return sum(rhoHat * np.conjugate(phiHat) / (2 * L))
+    return np.sum(np.real(rhoHat * np.conjugate(phiHat)) / (2 * L))

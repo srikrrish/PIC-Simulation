@@ -60,7 +60,7 @@ for itk in range(nk):
             vkp1,kinetic = dynamics.pushPicard(vp, ak, Q)
             xkp1 = dynamics.movePicard(xp,vp,vkp1)
             xkp1 = dynamics.toPeriodicND(xkp1, L)
-            phi, Eg, rhonp1 = field.fieldAmpere(Jb, rhon, L)
+            phi, Eg, rhonp1 = field.fieldAmperePicard(Jb, rhon, L)
             #err_pos = np.sqrt(np.sum((xkp1[0,:] - xk[0,:])**2) + np.sum((xkp1[1,:] - xk[1,:])**2)) / np.sqrt(np.sum(xkp1[0,:]**2) + np.sum(xkp1[1,:]**2))
             #err_vel = np.sqrt(np.sum((vkp1[0,:] - vk[0,:])**2) + np.sum((vkp1[1,:] - vk[1,:])**2)) / np.sqrt(np.sum(vkp1[0,:]**2) + np.sum(vkp1[1,:]**2))
             #if(itpicard == 0):

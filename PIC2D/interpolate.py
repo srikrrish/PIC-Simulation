@@ -76,10 +76,10 @@ def specInterpolate(XP, Shat, Q, L, wp=1, ng=NG):
 
 def interpolateCurrent(M, DX, Q, vp, L):
     Jb = np.zeros([2, NG, NG])
-    #Jb[0,:,:] = (Q / (DX[0]*DX[1])) * M.transpose().dot(np.transpose(vp[0,:])).reshape([NG, NG])
-    #Jb[1,:,:] = (Q / (DX[0]*DX[1])) * M.transpose().dot(np.transpose(vp[1,:])).reshape([NG, NG])
-    Jb[0,:,:] = (Q / (DX[0]*DX[1])) * (M.transpose() * vp[0:N]).reshape([NG, NG])
-    Jb[1,:,:] = (Q / (DX[0]*DX[1])) * (M.transpose() * vp[N:2*N]).reshape([NG, NG])
+    Jb[0,:,:] = (Q / (DX[0]*DX[1])) * M.transpose().dot(np.transpose(vp[0,:])).reshape([NG, NG])
+    Jb[1,:,:] = (Q / (DX[0]*DX[1])) * M.transpose().dot(np.transpose(vp[1,:])).reshape([NG, NG])
+    #Jb[0,:,:] = (Q / (DX[0]*DX[1])) * (M.transpose() * vp[0:N]).reshape([NG, NG])
+    #Jb[1,:,:] = (Q / (DX[0]*DX[1])) * (M.transpose() * vp[N:2*N]).reshape([NG, NG])
 
     return Jb
 

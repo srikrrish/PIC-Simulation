@@ -4,7 +4,7 @@ import cupy as cp
 from dynamics import toPeriodic
 from cupyx.scipy import sparse as sparsecp
 from scipy import sparse
-#import finufft
+import cufinufft
 
 p = cp.linspace(0, N - 1, N).astype(int)
 
@@ -53,5 +53,5 @@ def interpolateCurrent(M, DX, Q, vp, L):
 
 
 def specInterpolate(XP, Shat, Q, L, wp=1, ng=NG):
-    rhoHat = np.conjugate(Q * Shat * finufft.nufft2d1(XP[0] * 2 * np.pi / L[0], XP[1] * 2 * np.pi / L[1], 0j + np.zeros(N) + wp, tuple(ng), eps=1e-12, modeord=1))
+    rhoHat = cp.conjugate(Q * Shat * cufinufft.nufft2d1(XP[0] * 2 * cp.pi / L[0], XP[1] * 2 * cp.pi / L[1], 0j + cp.zeros(N) + wp, n_modes=(ng,ng), eps=1e-12, modeord=1))
     return rhoHat

@@ -43,6 +43,16 @@ def fieldAmpere(Jb, dphiNewton, L):
     dE = np.real(np.array([np.fft.ifft2(dEHat[0]), np.fft.ifft2(dEHat[1])]))
     return resphi, dE
 
+def fieldAmperePicard(Jb, rhoN, L):
+    rhonHat = np.fft.fft2(rhoN)
+    JHat = np.array([np.fft.fft2(Jb[0]), np.fft.fft2(Jb[1])])
+    phiHat, EHat, rhonp1Hat = fieldInFourierCurrentPicard(JHat, rhonHat, L)
+    rhonp1 = np.real(np.fft.ifft2(rhonp1Hat))
+    phi = np.real(np.fft.ifft2(phiHat))
+    E = np.real(np.array([np.fft.ifft2(EHat[0]), np.fft.ifft2(EHat[1])]))
+    return phi, E, rhonp1
+
+
 def fieldInFourierCurrent(JHat, dphiNewtonHat, L):
     Ja = np.arange(dphiNewtonHat.shape[0] // 2)
     Jb = Ja[:0:-1]
@@ -63,5 +73,28 @@ def fieldInFourierCurrent(JHat, dphiNewtonHat, L):
     #E1 = phiHat * -1j * K
     dE0 = dphiNewtonHat * -1j * J
     dE1 = dphiNewtonHat * -1j * K
+    dE0[dphiNewtonHat.shape[0] // 2] = 0
+    dE1[dphiNewtonHat.shape[1] // 2] = 0
     dEHat = np.array([dE0, dE1])
-    return dphiHat, dEHat
+    return dphiHat, dEHat, 
+
+def fieldInFourierCurrentPicard(JHat, rhonHat, L):
+    Ja = np.arange(rhonHat.shape[0] // 2)
+    Jb = Ja[:0:-1]
+    J = np.append(np.append(Ja, [-rhonHat.shape[0] // 2]), - Jb)
+    Ka = np.arange(rhonHat.shape[1] // 2)
+    Kb = Ka[:0:-1]
+    K = np.append(np.append(Ka, [-rhonHat.shape[1] // 2]), - Kb)
+    J = np.transpose(np.expand_dims(J, 0).repeat(rhonHat.shape[1], axis=0)) * 2 * np.pi / L[0]
+    K = np.expand_dims(K, 0).repeat(rhonHat.shape[0], axis=0) * 2 * np.pi / L[1]
+    absolute = J ** 2 + K ** 2
+    absolute[0,0] = 1
+    rhonp1Hat = rhonHat + DT * (-1j * J * JHat[0,:,:] + -1j * K * JHat[1,:,:])
+    phiHat = rhonp1Hat / absolute
+    phiHat[0,0] = 0
+    E0 = phiHat * -1j * J
+    E1 = phiHat * -1j * K
+    E0[rhonHat.shape[0] // 2] = 0
+    E1[rhonHat.shape[1] // 2] = 0
+    EHat = np.array([E0, E1])
+    return phiHat, EHat, rhonp1Hat

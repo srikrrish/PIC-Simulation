@@ -29,6 +29,13 @@ def fieldInFourier(rhoHat, L):
     phiHat[0,0] = 0
     E0 = phiHat * -1j * J
     E1 = phiHat * -1J * K
+    # Zero out Nyquist modes to ensure real symmetry and avoid spurious anisotropy
+    phiHat[rhoHat.shape[0]//2, :] = 0
+    phiHat[:, rhoHat.shape[1]//2] = 0
+    E0[rhoHat.shape[0]//2, :] = 0
+    E0[:, rhoHat.shape[1]//2] = 0
+    E1[rhoHat.shape[0]//2, :] = 0
+    E1[:, rhoHat.shape[1]//2] = 0
     EHat = cp.array([E0, E1])
     return phiHat, EHat
 

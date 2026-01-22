@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+#from scipy import optimize
 
 def findsource():
     return None
@@ -27,6 +29,12 @@ def Newton1d(xi, alpha, kd, u):
 
 def InvTransSampling(alpha,k,L,N):
     xp = np.zeros(N)
+    vp = np.zeros(N)
+    sigma = 1 / np.sqrt(2)
+    ninetypercent = int(0.9*N)
+    rem = N - ninetypercent
+    vp[:ninetypercent] = sigma * np.random.randn(ninetypercent)
+    vp[ninetypercent:] =  4.0 + sigma * np.random.randn(rem)
     u0 = np.random.rand(N)
     for i in range(N):
         print(i)
@@ -34,48 +42,39 @@ def InvTransSampling(alpha,k,L,N):
         x = u / (1+alpha)
         xp[i],niter = Newton1d(x,alpha,k,u)
 
-    return xp
+    return xp,vp
 
-
-
-k = 0.5
+k = 0.21
 L = 2*np.pi/k  # Length of the container
 DT = 0.05  # Length of a time step
-#DT = 0.01  # Length of a time step
-T = 60.0
+T = 60
 NT = int(T/DT)  # number of time steps
-NG = 32  # Number of Grid points
+NG = 32 # Number of Grid points
 N = 50000  # Number of simulation particles
-WP = 1  # omega p
 QM = -1  # charge per mass
 VT = 1  # Thermal Velocity
-#lambdaD = VT / WP
-#XP1 = 0.2  # Magnitude of perturbation in x
-#mode = 2  # Mode of the sin wave in perturbation
+alpha = 0.01  # Magnitude of perturbation in x
 Q = L / (QM * N)  # Charge of a particle
 rho_back = - Q * N / L  # background rho
 dx = L / NG  # cell length
-alpha = 0.05
 np.random.seed(0)
-xp = InvTransSampling(alpha,k,L,N)
-vp = np.random.randn(N)
-#i = 0
-#xp0 = np.zeros(int(N / mode))
-#vp0 = VT * np.random.randn(int(N / mode))
-#while i < int(N / mode):
-#    x = np.random.rand(1, 2) * np.array([L / mode, N / L * (1 + XP1)])
-#    if x[0, 1] < N / L * (1 + XP1 * np.sin(2 * np.pi * x[0, 0] / L * mode)):
-#        xp0[i] = x[0, 0]
-#        i = i + 1
-#xp = xp0
-#vp = vp0
-#for j in range(mode - 1):
-#    xp = np.append(xp, xp0 + L * (j + 1) / mode)
-#    vp = np.append(vp, vp0)
+xp,vp = InvTransSampling(alpha,k,L,N)
+bins = np.linspace(0,L,1000)
+plt.hist(xp,bins)
+plt.savefig('X_dist.png')
+plt.clf()
+binsv = np.linspace(-10,10,1000)
+plt.hist(vp,binsv)
+plt.savefig('V_dist.png')
+plt.clf()
 wp = 1
 Ek = []
 Ep = []
 E = []
 momentum = []
-Exp = []
 #phiMax = []
+Exp = []
+
+
+
+

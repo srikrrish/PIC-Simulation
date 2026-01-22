@@ -1,7 +1,7 @@
 from initialize import QM, DT, N, NT, NG, findsource, L
 from energy import kinetic
 import numpy as np
-#import finufft
+import finufft
 
 def accelerate(it, M, Eg, Eout, wp):
     Etemp = M * Eg
@@ -10,11 +10,13 @@ def accelerate(it, M, Eg, Eout, wp):
     return a, Eout
 
 
-def accelInFourier(vp, xp, it, EgHat, Shat, wp):
+def accelInFourier(vp, xp, it, EgHat, Eout, Shat, wp):
     coeff = EgHat * Shat
     coeff = np.append(coeff[0], coeff[:0:-1])
-    a = np.real(finufft.nufft1d2(xp * 2 * np.pi / initialize.L, coeff, eps=1e-12, modeord=1) * initialize.QM / (initialize.L * wp))
-    return push(vp, a, it)
+    Etemp = np.real(finufft.nufft1d2(xp * 2 * np.pi / L, coeff, eps=1e-12, modeord=1) / L)
+    a = Etemp * QM / wp
+    Eout[it,:] = Etemp.astype(np.float32)
+    return a, Eout
 
 
 def push(vp, a, it):
