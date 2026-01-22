@@ -1,5 +1,5 @@
 # PIC-Simulation
-### Author: Sriramkrishnan Muralikrishnan, Nigel Shen and Antoine Cerfon
+### Author: Sriramkrishnan Muralikrishnan, Chelsea John, Nigel Shen and Antoine Cerfon
 
 This repository is forked from the original repository of https://github.com/Nigel-Shen/PIC-Simulation from Nigel Shen. It is a python prototyping code for particle-in-cell type methods for electrostatic plasma simulations. This repo is used to generate training data for https://github.com/srikrrish/NEOPIC . 
 
